@@ -348,7 +348,7 @@ def editor(message, uni_id, call):
                                         bot_msg[uni_id].message_id,
                                         caption_entities = new_enteties
                                         )
-            print('bot_msg')
+            
         with shelve.open(r'./data/media_content') as media_content:
             if media_content[uni_id]['is mg']:
                 mc_dict = media_content[uni_id]['input media'][0].to_dict()
@@ -363,7 +363,7 @@ def editor(message, uni_id, call):
                 temp['input media'][2] = new_caption
                 temp['input media'][3] = new_enteties
                 media_content[uni_id] = temp
-                print('media group change')
+                
     else:
         client.register_next_step_handler_by_chat_id(message.chat.id, editor, uni_id, call)
 
@@ -516,7 +516,7 @@ def conf_parser(message):
 
     else:
         client.send_message(message.chat.id, '''Chat type is not channel. Try again.''')
- # Function call locks and unlocks file admin.conf by editing the 'lock' field
+# Function call locks and unlocks file admin.conf by editing the 'lock' field
 @client.message_handler(commands = ['lock'])        
 def lock(message):
     with shelve.open('admin.conf') as cf:
@@ -575,12 +575,14 @@ def bot_backgroud_monitor(event, cycle):
         logger.info(f'Bot is runnig {cycle} min')
         with shelve.open('admin.conf') as cf:
             scheduled_messages = shelve.open(r'./data/scheduled_messages')
-            if [*scheduled_messages.keys()]:
-                for key in [*scheduled_messages.keys()]:
-                    if scheduled_messages[key]['unix']-int(time.time())<0:
-                        media_sender(key,cf['channel_id'], 'approve')
-                        
+            temp = scheduled_messages
+            keys = [*temp.keys()]
             scheduled_messages.close()
+            if keys:
+                for key in keys:
+                    if temp[key]['unix']-int(time.time())<0:
+                        media_sender(key,cf['channel_id'], 'approve')
+
 
 # Function call check if admin alredy editing any other message.
 # If function returns True, admin can't reach either message caption edit method or message schedule
@@ -597,7 +599,6 @@ def is_any_editing():
 
 if __name__ == "__main__":
     try:
-        lock = False
         cycle = 0
         event = th.Event()
         thread = th.Thread(target=bot_backgroud_monitor, name='Monitor', args=(event,cycle,))
